@@ -36,7 +36,7 @@ Este é um jogo de **Truco com IA** desenvolvido utilizando a biblioteca `pygame
 3. Clique e arraste as cartas do jogador para soltá-las na mesa.
 4. O adversário (IA) jogará automaticamente sua carta.
 5. Veja os resultados dos turnos e rounds nos placares.
-6. Continue jogando até que um dos jogadores alcance 2 vitórias no round.
+6. Continue jogando até que um dos jogadores alcance 2 vitórias no turno.
 
 ## Organização da Interface
 - **Cartas do jogador**: Centralizadas na parte inferior da tela.
