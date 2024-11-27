@@ -57,12 +57,3 @@ Este é um jogo de **Truco com IA** desenvolvido utilizando a biblioteca `pygame
 - Adicionar animações nas jogadas.
 - Criar modo multijogador local ou online.
 
-## Contribuição
-Contribuições são bem-vindas! Se você deseja adicionar melhorias ou corrigir problemas, envie um pull request ou entre em contato com o desenvolvedor.
-
-## Licença
-Este projeto é de código aberto e está sob a licença MIT. Sinta-se à vontade para usar e modificar conforme necessário.
-
----
-Divirta-se jogando **Truco com IA**!
-
