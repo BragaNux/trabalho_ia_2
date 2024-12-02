@@ -3,40 +3,42 @@ import sys
 import random
 import pickle
 import math
+import tensorflow as tf
+import numpy as np
 
-# inicia
+# inicia pygame
 pygame.init()
 
-# config
+# config principais
 tamanho_janela = 900
 linhas, colunas = 3, 3
 tamanho_celula = tamanho_janela // linhas
 
-# corzinha
-BRANCO = (255, 255, 255)
-PRETO = (0, 0, 0)
-VERMELHO = (255, 0, 0)
-AZUL = (0, 0, 255)
-CINZA = (200, 200, 200)
+# cores
+branco = (255, 255, 255)
+preto = (0, 0, 0)
+vermelho = (255, 0, 0)
+azul = (0, 0, 255)
+cinza = (200, 200, 200)
 
-# nova window
+# cria janela do jogo
 janela = pygame.display.set_mode((tamanho_janela, tamanho_janela))
-pygame.display.set_caption('Jogo da Velha - IA vs IA')
+pygame.display.set_caption('jogo da velha - ia vs ia')
 
-# tabuleiro
-JOGADOR_X = 1
-JOGADOR_O = -1
+# estado do tabuleiro
+jogador_x = 1
+jogador_o = -1
 
-# recompensa
-recompensa_X = 0
-recompensa_O = 0
-vitorias_X = 0
-vitorias_O = 0
+# recompensas
+recompensa_x = 0
+recompensa_o = 0
+vitorias_x = 0
+vitorias_o = 0
 empates = 0
 
-# aprendizado por reforço
-memoria_X = []
-memoria_O = []
+# memória para aprendizado por reforço
+memoria_x = []
+memoria_o = []
 
 # carregar valores de estados aprendidos anteriormente, se existirem
 try:
@@ -45,23 +47,32 @@ try:
 except FileNotFoundError:
     valores_estado = {}  # armazena os valores de cada estado do tabuleiro
 
-# parametros de aprendizado
+# parâmetros de aprendizado
 alpha = 0.1  # taxa de aprendizado
 gamma = 0.95  # fator de desconto
 epsilon = 0.5  # probabilidade de exploração inicial
 epsilon_decay = 0.995  # fator de decaimento do epsilon
-min_epsilon = 0.01  # valor minimo do epsilon
+min_epsilon = 0.01  # valor mínimo do epsilon
 
-# softmax
+# definir o modelo tensorflow
+modelo = tf.keras.Sequential([
+    tf.keras.layers.InputLayer(shape=(9,)),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(9, activation='linear')
+])
+modelo.compile(optimizer='adam', loss='mse')
+
+# função softmax
 def softmax(q_values, temperatura=1.0):
     exp_q = [math.exp(q / temperatura) for q in q_values]
     soma_exp_q = sum(exp_q)
     probabilidades = [q / soma_exp_q for q in exp_q]
     return probabilidades
 
-# desenha os tabuleiros
+# função para desenhar o tabuleiro
 def desenhar_tabuleiro(tabuleiros):
-    janela.fill(BRANCO)
+    janela.fill(branco)
     num_jogos = len(tabuleiros)
     cols = int(num_jogos ** 0.5)
     rows = (num_jogos + cols - 1) // cols
@@ -72,81 +83,121 @@ def desenhar_tabuleiro(tabuleiros):
         base_x = (idx % cols) * celula_jogo
         base_y = (idx // cols) * celula_jogo
         
-        # separar
-        pygame.draw.rect(janela, CINZA, (base_x, base_y, celula_jogo, celula_jogo))
+        # fundo cinza para separar os jogos
+        pygame.draw.rect(janela, cinza, (base_x, base_y, celula_jogo, celula_jogo))
         
         # linhas do tabuleiro
         for linha in range(1, linhas):
-            pygame.draw.line(janela, PRETO, (base_x, base_y + linha * tamanho_celula_tabuleiro), (base_x + celula_jogo, base_y + linha * tamanho_celula_tabuleiro), 2)
-            pygame.draw.line(janela, PRETO, (base_x + linha * tamanho_celula_tabuleiro, base_y), (base_x + linha * tamanho_celula_tabuleiro, base_y + celula_jogo), 2)
+            pygame.draw.line(janela, preto, (base_x, base_y + linha * tamanho_celula_tabuleiro), (base_x + celula_jogo, base_y + linha * tamanho_celula_tabuleiro), 2)
+            pygame.draw.line(janela, preto, (base_x + linha * tamanho_celula_tabuleiro, base_y), (base_x + linha * tamanho_celula_tabuleiro, base_y + celula_jogo), 2)
         
-        # jogadore X e O
+        # desenhar x e o
         for linha in range(linhas):
             for coluna in range(colunas):
                 centro_x = base_x + coluna * tamanho_celula_tabuleiro + tamanho_celula_tabuleiro // 2
                 centro_y = base_y + linha * tamanho_celula_tabuleiro + tamanho_celula_tabuleiro // 2
-                if tabuleiro[linha][coluna] == JOGADOR_X:
-                    pygame.draw.line(janela, VERMELHO, (centro_x - 20, centro_y - 20), (centro_x + 20, centro_y + 20), 3)
-                    pygame.draw.line(janela, VERMELHO, (centro_x + 20, centro_y - 20), (centro_x - 20, centro_y + 20), 3)
-                elif tabuleiro[linha][coluna] == JOGADOR_O:
-                    pygame.draw.circle(janela, AZUL, (centro_x, centro_y), tamanho_celula_tabuleiro // 3, 3)
+                if tabuleiro[linha][coluna] == jogador_x:
+                    pygame.draw.line(janela, vermelho, (centro_x - 20, centro_y - 20), (centro_x + 20, centro_y + 20), 3)
+                    pygame.draw.line(janela, vermelho, (centro_x + 20, centro_y - 20), (centro_x - 20, centro_y + 20), 3)
+                elif tabuleiro[linha][coluna] == jogador_o:
+                    pygame.draw.circle(janela, azul, (centro_x, centro_y), tamanho_celula_tabuleiro // 3, 3)
 
-# verifica o vencedor
+# função para verificar se há um vencedor
 def verificar_vencedor(tabuleiro):
-    # linhas,colunas
+    # verificar linhas e colunas
     for i in range(linhas):
-        if sum(tabuleiro[i]) == 3 * JOGADOR_X or sum(tabuleiro[i]) == 3 * JOGADOR_O:
+        if sum(tabuleiro[i]) == 3 * jogador_x or sum(tabuleiro[i]) == 3 * jogador_o:
             return tabuleiro[i][0]
-        if sum([tabuleiro[j][i] for j in range(colunas)]) == 3 * JOGADOR_X or sum([tabuleiro[j][i] for j in range(colunas)]) == 3 * JOGADOR_O:
+        if sum([tabuleiro[j][i] for j in range(colunas)]) == 3 * jogador_x or sum([tabuleiro[j][i] for j in range(colunas)]) == 3 * jogador_o:
             return tabuleiro[0][i]
     
-    # diagonais
+    # verificar diagonais
     diagonal_principal = sum([tabuleiro[i][i] for i in range(linhas)])
     diagonal_secundaria = sum([tabuleiro[i][linhas - i - 1] for i in range(linhas)])
-    if diagonal_principal == 3 * JOGADOR_X or diagonal_principal == 3 * JOGADOR_O:
+    if diagonal_principal == 3 * jogador_x or diagonal_principal == 3 * jogador_o:
         return tabuleiro[0][0]
-    if diagonal_secundaria == 3 * JOGADOR_X or diagonal_secundaria == 3 * JOGADOR_O:
+    if diagonal_secundaria == 3 * jogador_x or diagonal_secundaria == 3 * jogador_o:
         return tabuleiro[0][linhas - 1]
     
     return 0
 
-# funcao para fazer jogadas automaticas com aprendizado por reforço
-def jogada_ia(tabuleiro, jogador):
-    escolhas_possiveis = [(linha, coluna) for linha in range(linhas) for coluna in range(colunas) if tabuleiro[linha][coluna] == 0]
-    estado_atual = tuple(tuple(linha) for linha in tabuleiro)  # converte o estado do tabuleiro para uma tupla para ser usada como chave
-    
-    if random.uniform(0, 1) < epsilon:  #explora
-        linha, coluna = random.choice(escolhas_possiveis)
-    else:  # melhores opções conhecidas usando softmax
-        q_values = []
-        for linha, coluna in escolhas_possiveis:
-            tabuleiro[linha][coluna] = jogador
-            novo_estado = tuple(tuple(l) for l in tabuleiro)
-            valor_estado = valores_estado.get(novo_estado, 0)
-            q_values.append(valor_estado)
-            tabuleiro[linha][coluna] = 0
-        
-        probabilidades = softmax(q_values)
-        escolha_idx = random.choices(range(len(escolhas_possiveis)), weights=probabilidades)[0]
-        linha, coluna = escolhas_possiveis[escolha_idx]
-    
-    # jogada
-    tabuleiro[linha][coluna] = jogador
-    
-    # salva o estado atual
-    novo_estado = tuple(tuple(linha) for linha in tabuleiro)
-    if jogador == JOGADOR_X:
-        memoria_X.append((estado_atual, novo_estado))
-    else:
-        memoria_O.append((estado_atual, novo_estado))
+# função para verificar se há uma jogada iminente de vitória ou derrota
+def jogada_iminente(tabuleiro, jogador):
+    for linha in range(linhas):
+        for coluna in range(colunas):
+            if tabuleiro[linha][coluna] == 0:
+                tabuleiro[linha][coluna] = jogador
+                if verificar_vencedor(tabuleiro) == jogador:
+                    tabuleiro[linha][coluna] = 0
+                    return (linha, coluna)
+                tabuleiro[linha][coluna] = 0
+    return None
 
-# main do jogo
+# função para verificar cerco
+def verificar_cerco(tabuleiro, jogador):
+    jogadas_possiveis = [(linha, coluna) for linha in range(linhas) for coluna in range(colunas) if tabuleiro[linha][coluna] == 0]
+    contagem_vitoria = 0
+    ultima_jogada = None
+
+    for linha, coluna in jogadas_possiveis:
+        tabuleiro[linha][coluna] = jogador
+        if jogada_iminente(tabuleiro, jogador):
+            contagem_vitoria += 1
+            ultima_jogada = (linha, coluna)
+        tabuleiro[linha][coluna] = 0
+
+    if contagem_vitoria >= 2:
+        return ultima_jogada
+    return None
+
+# função para a ia fazer a jogada
+def jogada_ia(tabuleiro, jogador):
+    estado_atual = np.array(tabuleiro).flatten().reshape(1, -1)  # converter o estado do tabuleiro para um array
+
+    # verificar se há uma jogada iminente de vitória para a ia
+    jogada = jogada_iminente(tabuleiro, jogador)
+    if jogada:
+        linha, coluna = jogada
+    else:
+        # verificar se há uma jogada iminente de vitória para o oponente e bloquear
+        oponente = jogador_x if jogador == jogador_o else jogador_o
+        jogada = jogada_iminente(tabuleiro, oponente)
+        if jogada:
+            linha, coluna = jogada
+        else:
+            # verificar se o oponente está tentando fazer um cerco
+            jogada = verificar_cerco(tabuleiro, oponente)
+            if jogada:
+                linha, coluna = jogada
+            else:
+                # se não houver jogada iminente, escolher a melhor jogada usando o modelo
+                escolhas_possiveis = [(linha, coluna) for linha in range(linhas) for coluna in range(colunas) if tabuleiro[linha][coluna] == 0]
+                
+                if random.uniform(0, 1) < epsilon:  # exploração (escolher jogada aleatória)
+                    linha, coluna = random.choice(escolhas_possiveis)
+                else:  # usar o modelo para prever a melhor jogada
+                    previsoes = modelo.predict(estado_atual)[0]
+                    q_values = [previsoes[linha * colunas + coluna] for linha, coluna in escolhas_possiveis]
+                    probabilidades = softmax(q_values)
+                    escolha_idx = random.choices(range(len(escolhas_possiveis)), weights=probabilidades)[0]
+                    linha, coluna = escolhas_possiveis[escolha_idx]
+
+    # fazer a jogada
+    tabuleiro[linha][coluna] = jogador
+
+    # salvar o estado atual do tabuleiro na memória
+    novo_estado = np.array(tabuleiro).flatten()
+    if jogador == jogador_x:
+        memoria_x.append((estado_atual, novo_estado))
+    elif jogador == jogador_o:
+        memoria_o.append((estado_atual, novo_estado))
+
+# função principal do jogo
 def jogo_da_velha():
-    global recompensa_X, recompensa_O, memoria_X, memoria_O, valores_estado, epsilon, vitorias_X, vitorias_O, empates
+    global recompensa_x, recompensa_o, memoria_x, memoria_o, valores_estado, epsilon, vitorias_x, vitorias_o, empates
     rodando = True
-    jogador_atual = JOGADOR_X
-    max_partidas = 10000  # numero de partidas
-    num_jogos = 9  # qnt jogo simultaneo
+    max_partidas = 10000  # número de partidas para treinamento
+    num_jogos = 9  # número de jogos simultâneos
     tabuleiros = [[[0 for _ in range(colunas)] for _ in range(linhas)] for _ in range(num_jogos)]
     
     partidas = 0
@@ -162,62 +213,60 @@ def jogo_da_velha():
         for i, tabuleiro in enumerate(tabuleiros):
             vencedor = verificar_vencedor(tabuleiro)
             if vencedor == 0 and any(tabuleiro[linha][coluna] == 0 for linha in range(linhas) for coluna in range(colunas)):
-                jogada_ia(tabuleiro, jogador_atual)
-                jogador_atual *= -1
+                jogada_ia(tabuleiro, jogador_x if partidas % 2 == 0 else jogador_o)
                 vencedor = verificar_vencedor(tabuleiro)
             
             if vencedor != 0 or all(tabuleiro[linha][coluna] != 0 for linha in range(linhas) for coluna in range(colunas)):
                 recompensa = 0
-                if vencedor == JOGADOR_X:
-                    recompensa_X += 5  # recompesa da vitoria
-                    recompensa_O -= 3  # penalidade da derrota
+                if vencedor == jogador_x:
+                    recompensa_x += 5  # recompensa por vitória
+                    recompensa_o -= 3  # penalidade por derrota
                     recompensa = 5
-                    vitorias_X += 1
-                    print(f'Jogador X venceu no jogo {i + 1}!')
-                elif vencedor == JOGADOR_O:
-                    recompensa_O += 5  
-                    recompensa_X -= 3  
+                    vitorias_x += 1
+                    print(f'jogador x venceu no jogo {i + 1}!')
+                elif vencedor == jogador_o:
+                    recompensa_o += 5  # recompensa por vitória
+                    recompensa_x -= 3  # penalidade por derrota
                     recompensa = -5
-                    vitorias_O += 1
-                    print(f'Jogador O venceu no jogo {i + 1}!')
+                    vitorias_o += 1
+                    print(f'jogador o venceu no jogo {i + 1}!')
                 else:
-                    recompensa_X += 5  # recompensa pra empate
-                    recompensa_O += 5
+                    recompensa_x += 5  # recompensa por empate
+                    recompensa_o += 5
                     recompensa = 5
                     empates += 1
-                    print(f'Empate no jogo {i + 1}!')
+                    print(f'empate no jogo {i + 1}!')
                 
-                # ajuste de aprendizado q-learning simples
-                for estado_ant, estado_atual in memoria_X:
-                    valores_estado[estado_ant] = valores_estado.get(estado_ant, 0) + alpha * (recompensa + gamma * valores_estado.get(estado_atual, 0) - valores_estado.get(estado_ant, 0))
-                for estado_ant, estado_atual in memoria_O:
-                    valores_estado[estado_ant] = valores_estado.get(estado_ant, 0) + alpha * (-recompensa + gamma * valores_estado.get(estado_atual, 0) - valores_estado.get(estado_ant, 0))
+                # ajuste de aprendizado (q-learning)
+                for estado_ant, estado_atual in memoria_x:
+                    modelo.fit(estado_ant, np.array([recompensa]), verbose=0)
+                for estado_ant, estado_atual in memoria_o:
+                    modelo.fit(estado_ant, np.array([-recompensa]), verbose=0)
                 
-                # reiniciar proxima partida
+                # salvar apenas estados de empates e cercos
+                if vencedor == 0 or verificar_cerco(tabuleiro, jogador_x) or verificar_cerco(tabuleiro, jogador_o):
+                    with open('valores_estado.pkl', 'wb') as f:
+                        pickle.dump(valores_estado, f)
+                
+                # reiniciar o tabuleiro para a próxima partida
                 tabuleiros[i] = [[0 for _ in range(colunas)] for _ in range(linhas)]
-                jogador_atual = JOGADOR_X if partidas % 2 == 0 else JOGADOR_O
-                memoria_X.clear()
-                memoria_O.clear()
+                memoria_x.clear()
+                memoria_o.clear()
                 
-                # diminui o epsilon pra diminuir a exploracao
+                # reduzir a exploração ao longo do tempo
                 if epsilon > min_epsilon:
                     epsilon *= epsilon_decay
                 
-                # finalmente ficou inteligente
+                # parar o treinamento se alcançar um bom desempenho
                 partidas += 1
-                if partidas >= max_partidas and (vitorias_X == 0 or vitorias_O == 0 or empates / partidas > 0.95):
+                if partidas >= max_partidas and (vitorias_x == 0 or vitorias_o == 0 or empates / partidas > 0.95):
                     rodando = False
         
         desenhar_tabuleiro(tabuleiros)
         pygame.display.update()
     
-    # exibir recompensas finais e estatisticas
-    print(f'Recompensa Final - Jogador X: {recompensa_X}, Jogador O: {recompensa_O}')
-    print(f'Vitórias Jogador X: {vitorias_X}, Vitórias Jogador O: {vitorias_O}, Empates: {empates}')
-    
-    # salvar os valores de estado aprendidos
-    with open('valores_estado.pkl', 'wb') as f:
-        pickle.dump(valores_estado, f)
+    # exibir resultados finais
+    print(f'recompensa final - jogador x: {recompensa_x}, jogador o: {recompensa_o}')
 
 if __name__ == "__main__":
     jogo_da_velha()
