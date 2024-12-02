@@ -69,7 +69,3 @@ Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aume
    python jogo_da_velha.py
    ```
 
-## Considerações Finais
-
-A mudança para o Jogo da Velha foi uma decisão baseada em fatores práticos e de aprendizado. Este projeto é um exemplo do uso de aprendizado por reforço aplicado
-
