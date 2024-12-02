@@ -69,3 +69,7 @@ Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aume
    python jogo_da_velha.py
    ```
 
+## Considerações Finais
+A mudança para o Jogo da Velha foi uma decisão baseada em fatores práticos e de aprendizado. Este projeto é um exemplo do uso de aprendizado por reforço aplicado a jogos simples como o Jogo da Velha. Embora o objetivo inicial seja fazer com que a IA empate sempre ou ganhe, a dificuldade em treinar uma IA para entender táticas complexas como o cerco é um desafio interessante que demonstra a complexidade de aplicar técnicas de aprendizado de máquina a problemas reais.
+
+Com o treinamento contínuo e ajustes nos hiperparâmetros, espera-se que a IA se torne mais robusta e eficaz em evitar derrotas, mesmo quando confrontada com estratégias específicas do adversário.
