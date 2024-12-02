@@ -59,7 +59,7 @@ Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aume
 
 ## Como Executar
 
-1. **Instalar Dependências**: Certifique-se de instalar as dependências necessárias, incluindo Pygame, TensorFlow e Pickle:
+1. **Instalar Dependências**: Certifique-se de instalar as dependências necessárias, incluindo Pygame, TensorFlow e Pickles:
    ```sh
    pip install pygame tensorflow
    ```
