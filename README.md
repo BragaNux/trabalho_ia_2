@@ -10,7 +10,20 @@ O objetivo deste projeto é desenvolver uma IA suficientemente inteligente para 
 
 A IA utiliza aprendizado por reforço e uma rede neural treinada para aprender a melhor forma de evitar perder partidas e buscar empatar quando o adversário tentar uma tática estratégica.
 
+## Por que Mudei para o Jogo da Velha
+
+Inicialmente, o projeto estava focado em desenvolver uma IA para o jogo de Truco. No entanto, algumas dificuldades técnicas e de design acabaram motivando a mudança para o Jogo da Velha. Entre os principais desafios encontrados no desenvolvimento da IA para o Truco, destacam-se:
+
+1. **Complexidade das Regras**: O Truco é um jogo que envolve muitas variáveis, incluindo blefes, leitura de comportamento do adversário e combinações específicas de cartas. Isso tornou a modelagem da IA muito complexa em relação às ferramentas que eu tinha disponíveis.
+
+2. **Dificuldade em Simular Blefes**: Ensinar uma IA a blefar ou interpretar blefes é um desafio significativo que exige métodos avançados de aprendizado de máquina. Esses aspectos tornaram o progresso mais lento do que o esperado.
+
+3. **Limitações no Tempo Disponível**: O desenvolvimento de uma IA para Truco requer um tempo considerável de pesquisa, teste e ajuste fino. Com as limitações de tempo, decidi redirecionar meus esforços para um projeto mais viável no curto prazo.
+
+Por outro lado, o Jogo da Velha apresentou-se como uma alternativa mais adequada para o momento, permitindo que eu aplicasse técnicas de aprendizado por reforço de maneira eficaz e ao mesmo tempo tivesse um escopo gerenciável.
+
 ## Ferramentas Utilizadas
+
 - **Python**: Linguagem de programação usada no desenvolvimento do código.
 - **Pygame**: Biblioteca para criar interfaces gráficas e simular o tabuleiro do jogo.
 - **TensorFlow**: Biblioteca de aprendizado de máquina para criar, treinar e ajustar a rede neural que compõe a IA.
@@ -58,7 +71,5 @@ Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aume
 
 ## Considerações Finais
 
-Este projeto é um exemplo do uso de aprendizado por reforço aplicado a jogos simples como o Jogo da Velha. Embora o objetivo inicial seja fazer com que a IA empate sempre ou ganhe, a dificuldade em treinar uma IA para entender táticas complexas como o cerco é um desafio interessante que demonstra a complexidade de aplicar técnicas de aprendizado de máquina a problemas reais.
-
-Com o treinamento contínuo e ajustes nos hiperparâmetros, espera-se que a IA se torne mais robusta e eficaz em evitar derrotas, mesmo quando confrontada com estratégias específicas do adversário.
+A mudança para o Jogo da Velha foi uma decisão baseada em fatores práticos e de aprendizado. Este projeto é um exemplo do uso de aprendizado por reforço aplicado
 
