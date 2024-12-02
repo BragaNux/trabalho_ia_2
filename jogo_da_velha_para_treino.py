@@ -14,7 +14,7 @@ tamanho_janela = 900
 linhas, colunas = 3, 3
 tamanho_celula = tamanho_janela // linhas
 
-# cores
+# cores basicas
 branco = (255, 255, 255)
 preto = (0, 0, 0)
 vermelho = (255, 0, 0)
