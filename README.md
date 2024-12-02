@@ -1,4 +1,4 @@
-# #️⃣ Treinamento da IA no Jogo da Velha
+# Treinamento da IA no Jogo da Velha #️⃣
 
 ## Visão Geral
 
