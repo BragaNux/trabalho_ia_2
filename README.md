@@ -31,7 +31,7 @@ Por outro lado, o Jogo da Velha apresentou-se como uma alternativa mais adequada
 
 ## Estratégia de Treinamento
 
-1. **Treinamento em Auto-Competção**: A IA foi configurada para jogar contra si mesma em 9 jogos simultâneos. Isso ajuda a explorar várias possibilidades de jogadas e melhorar o aprendizado de estratégias.
+1. **Treinamento em Auto-Competição**: A IA foi configurada para jogar contra si mesma em 9 jogos simultâneos. Isso ajuda a explorar várias possibilidades de jogadas e melhorar o aprendizado de estratégias.
 
 2. **Treinamento Baseado em Jogos Significativos**: Para acelerar o aprendizado, a IA só salva estados de jogos que foram considerados significativos, como partidas em que ocorreu empate ou situações em que a IA evitou um cerco. Esse mecanismo visa evitar o armazenamento de estados triviais e focar nos aspectos mais desafiadores do jogo.
 
@@ -41,25 +41,30 @@ Por outro lado, o Jogo da Velha apresentou-se como uma alternativa mais adequada
 
 ## Atualizações Recentes
 
-1. **Aprendizado de Jogos com Cercos**: A IA agora salva apenas estados de jogos em que conseguiu evitar cercos ou jogos que terminaram em empate. Isso ajuda a concentrar o aprendizado nos cenários mais desafiadores, que são os que requerem uma estratégia de defesa mais elaborada.
+1. **Salvamento de Estados e Modelo**: Foi implementado um mecanismo para salvar o modelo treinado em formato `.h5` e os estados aprendidos em um arquivo `valores_estado.pkl` ao final de cada sessão de treinamento, garantindo que o progresso não seja perdido.
 
-2. **Jogadas Iminentes e Cercos**: A IA foi programada para priorizar, em primeiro lugar, jogadas que garantem sua própria vitória. Caso não exista essa possibilidade, ela verifica se o adversário está próximo de vencer e bloqueia a jogada. Se não houver jogadas iminentes, ela tenta prever cercos e bloqueá-los.
+2. **Problemas no Salvamento**: Identificou-se que, em algumas execuções, o modelo salvo não refletia o aprendizado esperado. Apesar de os arquivos serem gerados, o desempenho da IA em partidas contra humanos indicava que ela não utilizava plenamente o que havia sido treinado.
+
+3. **Jogadas Iminentes e Cercos**: A IA foi programada para priorizar, em primeiro lugar, jogadas que garantem sua própria vitória. Caso não exista essa possibilidade, ela verifica se o adversário está próximo de vencer e bloqueia a jogada. Se não houver jogadas iminentes, ela tenta prever cercos e bloqueá-los.
+
+4. **Limitações Observadas**: Apesar dos ajustes, a IA ainda apresenta comportamento subótimo em situações de cerco e, em muitos casos, realiza jogadas aleatórias que sugerem falta de aprendizado consistente.
 
 ## Resultados Observados
 
-Nos testes recentes, foi observado que a IA ainda comete erros que permitem ao jogador humano vencer, principalmente em situações de cerco. No entanto, os ajustes realizados ajudaram a IA a ser mais eficaz em detectar e bloquear essas táticas na maioria dos casos.
+Nos testes recentes, foi observado que a IA ainda comete erros que permitem ao jogador humano vencer, principalmente em situações de cerco. Além disso, o progresso em evitar derrotas e empatar jogos parece ser inconsistente, mesmo após longos períodos de treinamento.
 
-Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aumento na taxa de empates, o que é desejável, já que isso demonstra que está mais difícil para qualquer lado vencer. A expectativa é que, com o treinamento contínuo e o ajuste da estratégia de cerco, a IA alcance um nível em que só ocorram empates.
+Embora a IA consiga aumentar a quantidade de empates e vitórias contra si mesma em cenários de auto-treinamento, sua performance contra jogadores humanos continua aquém do esperado. Os testes sugerem que o problema pode estar relacionado ao salvamento ou carregamento inadequado do modelo treinado.
 
 ## Próximos Passos
 
-- **Treinamento Contínuo**: Continuar treinando a IA, com foco especial em cercos e outras táticas estratégicas do adversário.
-- **Aprimorar Detecção de Cenários Críticos**: Melhorar a função de verificação de cercos para que a IA se torne ainda mais eficiente em identificar e evitar situações críticas.
-- **Revisão dos Pesos de Recompensa**: Ajustar os pesos das recompensas para otimizar o aprendizado, buscando uma distribuição que incentive o comportamento defensivo quando apropriado.
+- **Verificação do Processo de Salvamento e Carregamento**: Garantir que o modelo treinado está sendo salvo corretamente e que os pesos aprendidos estão sendo utilizados durante os jogos contra humanos.
+- **Revisão do Algoritmo de Treinamento**: Analisar e ajustar o algoritmo de treinamento para garantir que a IA esteja realmente aprendendo com as partidas realizadas.
+- **Aprimorar Detecção de Cenários Críticos**: Melhorar a função de verificação de cercos para que a IA se torne mais eficiente em identificar e evitar situações críticas.
+- **Revisão dos Pesos de Recompensa**: Ajustar os pesos das recompensas para otimizar o aprendizado, buscando uma distribuição que incentive o comportamento defensivo e ofensivo de forma equilibrada.
 
 ## Como Executar
 
-1. **Instalar Dependências**: Certifique-se de instalar as dependências necessárias, incluindo Pygame, TensorFlow e Pickles:
+1. **Instalar Dependências**: Certifique-se de instalar as dependências necessárias, incluindo Pygame, TensorFlow e Pickle:
    ```sh
    pip install pygame tensorflow
    ```
@@ -70,6 +75,7 @@ Nos testes de auto-treinamento com 9 jogos simultâneos, a IA apresentou um aume
    ```
 
 ## Considerações Finais
-A mudança para o Jogo da Velha foi uma decisão baseada em fatores práticos e de aprendizado. Este projeto é um exemplo do uso de aprendizado por reforço aplicado a jogos simples como o Jogo da Velha. Embora o objetivo inicial seja fazer com que a IA empate sempre ou ganhe, a dificuldade em treinar uma IA para entender táticas complexas como o cerco é um desafio interessante que demonstra a complexidade de aplicar técnicas de aprendizado de máquina a problemas reais.
 
-Com o treinamento contínuo e ajustes nos hiperparâmetros, espera-se que a IA se torne mais robusta e eficaz em evitar derrotas, mesmo quando confrontada com estratégias específicas do adversário.
+Apesar de esforços significativos, a IA ainda não alcançou o nível esperado de inteligência para competir contra jogadores humanos de forma consistente. O projeto destaca os desafios práticos de aplicar aprendizado por reforço em jogos estratégicos, mesmo em cenários simples como o Jogo da Velha.
+
+Com ajustes contínuos no treinamento, salvamento e detecção de cenários críticos, espera-se que a IA evolua para um nível em que possa empatar ou vencer consistentemente. Por ora, os resultados reforçam a importância de um ciclo iterativo de testes e melhorias para alcançar os objetivos desejados.
